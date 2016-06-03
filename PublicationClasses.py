@@ -20,16 +20,16 @@ class Publication:
 		#method for printing object 
 		return str(self.refKey) + ": " + str(self.pubType) + ".\n\t Keywords = " + str(self.keywords)
 
-#Article class inherits from this 
+#Article class inherits from publication 
 class Article(Publication):
 	"""
 	Article class. Inherits from Publication class.
 	"""
 	pubType = "article"
 
-	#Required article attributes 
-	#(First) Author, Title, Journal, Journal volume, Journal number, Publication year
-	#Further options include 
+	#Required attributes are
+	#Author, Title, Journal, Journal volume, Journal number, Publication year
+	#Further attributes include 
 	#DOI, Link, Keywords, and Notes
 	#One author is required but other authors can be added 
 	def setAuthor(self,author):
@@ -60,6 +60,50 @@ class Article(Publication):
 	def addKeyword(self,keyword):
 		self.keywords.append(keyword)
 
+	def addNote(self,note):
+		self.note = note
+
+	def addAuthor(self,author):
+		self.authors.append(author)
+
+#Book class inherits from publication
+class Book(Publication):
+	"""
+	Book class. Inherits from Publication class.
+	"""
+	pubType = "book"
+
+	#required attributes are 
+	#Author, Title, Publisher, Publishing Location, Publishing Year
+	#Additional attributes are 
+	#Link, Keywords, and Notes
+	#One author is required but more can be added 
+
+	def setAuthor(self,author):
+		self.authors = []
+		self.authors.append(author)
+
+	def setTitle(self,title):
+		self.title = title
+
+	def setPublisher(self,publisher):
+		self.publisher = publisher
+
+	def setLocation(self,location):
+		self.location = location
+
+	def setYear(self,year):
+		self.year = year
+
+	def addLink(self,link):
+		self.link = link
+
+	def addKeyword(self,keyword):
+		self.keywords.append(keyword)
+
+	def addNote(self,note):
+		self.note = note
+
 	def addAuthor(self,author):
 		self.authors.append(author)
 
@@ -79,10 +123,23 @@ def main():
 	pub1.addKeyword("Publication")
 	pub1.addAuthor("J.B. Curtis")
 
+	pub2 = Book("myFirstBook")
+	pub2.setAuthor("Jon Curtis")
+	pub2.setTitle("Book Writing For Dummies")
+	pub2.setPublisher("Publishing Company")
+	pub2.setLocation("New York City")
+	pub2.setYear("2020")
+	pub2.addKeyword("Publishing")
+	pub2.addKeyword("Dummies")
+	pub2.addAuthor("Your Mom")
+
+
 	print pub0
 	print
 	print pub1
 	print
+	print pub2
+	print pub2.authors
 
 if __name__ == "__main__":
 	main()
