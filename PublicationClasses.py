@@ -4,7 +4,6 @@
 #This file is the class file for publications 
 #There will be a base publication class 
 #We will derive various types of publications from it 
-
 class Publication:
 	"""
 	Base class for publication objects. 
@@ -15,7 +14,10 @@ class Publication:
 	def __init__(self, user_key):
 		self.requiredFieldsFull = False	#once the required fields for a publication are filled, this is set true
 		self.refKey = user_key 
-		self.keywords = []	#all publications can have keywords 
+		self.keywords = set([])	
+		#all publications can have keywords
+		#keywords is a set of strings that are relevant to the entry 
+
 
 	def __str__(self):
 		#we update to see if required fields are full
@@ -25,8 +27,8 @@ class Publication:
 		 +"\n\t Keywords: " + str(self.keywords)
 
 	def addKeyword(self,keyword):
-		#all publications can have keywords
-		self.keywords.append(keyword)
+		#this adds a keyword to a set 
+		self.keywords.add(keyword)
 
 	def requiredFieldsCheck(self):
 		return False
@@ -156,26 +158,26 @@ debug_article = Article("debug_article")
 debug_article.addAuthor("First Author")
 debug_article.setTitle("The Title")
 debug_article.setJournalName("Journal Name")
-debug_article.setJournalVolume("500")
-debug_article.setJournalNumber("30")
-debug_article.setYear("2016")
+debug_article.setJournalVolume(500)
+debug_article.setJournalNumber(30)
+debug_article.setYear(2016)
 debug_article.addDOI("DOI")
 debug_article.addLink("www.thelink.com")
 debug_article.addAuthor("Second Author")
-debug_article.addKeyword("Debug")
-debug_article.addKeyword("Article")
-debug_article.addKeyword("Test")
+debug_article.addKeyword("debug")
+debug_article.addKeyword("article")
+debug_article.addKeyword("test")
 
 debug_book = Book("debug_book")
 debug_book.addAuthor("First Author")
 debug_book.setTitle("The Title")
 debug_book.setPublisher("Publisher Name")
-debug_book.setYear("2016")
+debug_book.setYear(2016)
 debug_book.addLink("www.thelink.com")
 debug_book.addAuthor("Second Author")
-debug_book.addKeyword("Debug")
-debug_book.addKeyword("Book")
-debug_book.addKeyword("Test")
+debug_book.addKeyword("debug")
+debug_book.addKeyword("book")
+debug_book.addKeyword("test")
 
 def main():
 	print debug_publication
