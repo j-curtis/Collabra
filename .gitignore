@@ -1,0 +1,9 @@
+*.[oa]
+#ignore object files
+
+*.pyc
+#ignore compiled python libraries
+
+*.bin 
+*.exe 
+#ignore compiled binaries 
