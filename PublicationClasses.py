@@ -13,12 +13,23 @@ class Publication:
 	pubType = None
 
 	def __init__(self, user_key):
+		self.requiredFieldsFull = False	#once the required fields for a publication are filled, this is set true
 		self.refKey = user_key 
 		self.keywords = []	#all publications can have keywords 
 
 	def __str__(self):
+		#we update to see if required fields are full
+		self.requiredFieldsCheck()
 		#method for printing object 
-		return str(self.refKey) + ": " + str(self.pubType) + ".\n\t Keywords = " + str(self.keywords)
+		return "Publication: " + str(self.refKey) + ", type: " + str(self.pubType) + ", required fields filled = "+str(self.requiredFieldsFull)\
+		 +"\n\t Keywords: " + str(self.keywords)
+
+	def addKeyword(self,keyword):
+		#all publications can have keywords
+		self.keywords.append(keyword)
+
+	def requiredFieldsCheck(self):
+		return False
 
 #Article class inherits from publication 
 class Article(Publication):
@@ -27,14 +38,30 @@ class Article(Publication):
 	"""
 	pubType = "article"
 
+	#in the overloaded constructor we set all possible fields to empty or None
+	def __init__(self,user_key):
+		#first we call the base class init
+		Publication.__init__(self,user_key)
+		##now we initialize the specific attributes
+		self.authors = []
+		self.authorsCount = 0
+		self.title = None
+		self.journal = None
+		self.journalVolume = None
+		self.journalNumber = None
+		self.year = None
+		self.doi = None
+		self.link = None
+		self.note = None
+
 	#Required attributes are
 	#Author, Title, Journal, Journal volume, Journal number, Publication year
 	#Further attributes include 
 	#DOI, Link, Keywords, and Notes
 	#One author is required but other authors can be added 
-	def setAuthor(self,author):
-		self.authors = []
+	def addAuthor(self,author):
 		self.authors.append(author)
+		self.authorsCount = len(self.authors)
 
 	def setTitle(self,title):
 		self.title = title
@@ -57,14 +84,17 @@ class Article(Publication):
 	def addLink(self,link):
 		self.link = link
 
-	def addKeyword(self,keyword):
-		self.keywords.append(keyword)
-
 	def addNote(self,note):
 		self.note = note
 
-	def addAuthor(self,author):
-		self.authors.append(author)
+	def requiredFieldsCheck(self):
+		#checks if all required fields are full
+		#returns result of the check
+		#check author count first 
+		self.requiredFieldsFull = ( self.authorsCount > 0 ) and\
+		 not (None in [self.title,self.journalName,self.journalVolume,self.journalNumber,self.year] )
+		return self.requiredFieldsFull
+	
 
 #Book class inherits from publication
 class Book(Publication):
@@ -73,15 +103,25 @@ class Book(Publication):
 	"""
 	pubType = "book"
 
+	#in the overloaded constructor we set all possible fields to empty or None
+	def __init__(self,user_key):
+		#first we call the base class init
+		Publication.__init__(self,user_key)
+		##now we initialize the specific attributes
+		self.authors = []
+		self.authorsCount = 0
+		self.title = None
+		self.publisher = None
+		self.year = None
+
 	#required attributes are 
-	#Author, Title, Publisher, Publishing Location, Publishing Year
+	#Author, Title, Publisher, Publishing Year
 	#Additional attributes are 
 	#Link, Keywords, and Notes
 	#One author is required but more can be added 
-
-	def setAuthor(self,author):
-		self.authors = []
+	def addAuthor(self,author):
 		self.authors.append(author)
+		self.authorsCount = len(self.authors)
 
 	def setTitle(self,title):
 		self.title = title
@@ -89,57 +129,61 @@ class Book(Publication):
 	def setPublisher(self,publisher):
 		self.publisher = publisher
 
-	def setLocation(self,location):
-		self.location = location
-
 	def setYear(self,year):
 		self.year = year
 
 	def addLink(self,link):
 		self.link = link
 
-	def addKeyword(self,keyword):
-		self.keywords.append(keyword)
-
 	def addNote(self,note):
 		self.note = note
 
-	def addAuthor(self,author):
-		self.authors.append(author)
+	def requiredFieldsCheck(self):
+		#checks if all required fields are full
+		#returns result of the check
+		#check author count first 
+		self.requiredFieldsFull = ( self.authorsCount > 0 ) and\
+		 not (None in [self.title,self.publisher,self.year] )
+		return self.requiredFieldsFull
 
+#Some default debugging instances of the provided classes 
+debug_publication = Publication("debug_publication")
+debug_publication.addKeyword("Debug")
+debug_publication.addKeyword("Publication")
+debug_publication.addKeyword("Test")
+
+debug_article = Article("debug_article")
+debug_article.addAuthor("First Author")
+debug_article.setTitle("The Title")
+debug_article.setJournalName("Journal Name")
+debug_article.setJournalVolume("500")
+debug_article.setJournalNumber("30")
+debug_article.setYear("2016")
+debug_article.addDOI("DOI")
+debug_article.addLink("www.thelink.com")
+debug_article.addAuthor("Second Author")
+debug_article.addKeyword("Debug")
+debug_article.addKeyword("Article")
+debug_article.addKeyword("Test")
+
+debug_book = Book("debug_book")
+debug_book.addAuthor("First Author")
+debug_book.setTitle("The Title")
+debug_book.setPublisher("Publisher Name")
+debug_book.setYear("2016")
+debug_book.addLink("www.thelink.com")
+debug_book.addAuthor("Second Author")
+debug_book.addKeyword("Debug")
+debug_book.addKeyword("Book")
+debug_book.addKeyword("Test")
 
 def main():
-	#debugging 
-	pub0 = Publication("no_pub")
-
-	pub1 = Article("myFirstPub")
-	pub1.setAuthor("Jon Curtis")
-	pub1.setTitle("My First Publication")
-	pub1.setJournalName("Physical Review Letters")
-	pub1.setJournalVolume("40")
-	pub1.setJournalNumber("52")
-	pub1.setYear("2016")
-	pub1.addKeyword("First")
-	pub1.addKeyword("Publication")
-	pub1.addAuthor("J.B. Curtis")
-
-	pub2 = Book("myFirstBook")
-	pub2.setAuthor("Jon Curtis")
-	pub2.setTitle("Book Writing For Dummies")
-	pub2.setPublisher("Publishing Company")
-	pub2.setLocation("New York City")
-	pub2.setYear("2020")
-	pub2.addKeyword("Publishing")
-	pub2.addKeyword("Dummies")
-	pub2.addAuthor("Your Mom")
-
-
-	print pub0
+	print debug_publication
 	print
-	print pub1
-	print
-	print pub2
-	print pub2.authors
+	print debug_article
+	print 
+	print debug_book
+	print 
 
 if __name__ == "__main__":
 	main()
