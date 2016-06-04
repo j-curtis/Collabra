@@ -3,7 +3,9 @@
 
 #This file is the class file for publications 
 #There will be a base publication class 
-#We will derive various types of publications from it 
+#We will derive various types of publications from it
+#but all attributes will be determined from the base class and set to None
+#each class will use some of the attributes 
 class Publication:
 	"""
 	Base class for publication objects. 
@@ -11,27 +13,35 @@ class Publication:
 	"""
 	pubType = None
 
-	def __init__(self, user_key):
-		self.requiredFieldsFull = False	#once the required fields for a publication are filled, this is set true
-		self.refKey = user_key 
-		self.keywords = set([])	
+	def __init__(self, refKey):
+		self.refKey = refKey #unique identifier for internal/citation reference
+		self.keywords = set([])	#optional set of keywords
 		#all publications can have keywords
 		#keywords is a set of strings that are relevant to the entry 
+		self.authors = None	#string(list)/authors 
+		self.title = None	#string/title 
+		self.journal = None	#string/journal name 
+		self.volume = None	#int/journal volume
+		self.number = None #int/journal number
+		self.year = None #int/year of publication
+		self.month = None #int/month of publication
+		self.publisher = None #string/publisher name
+		self.location = None #string/publishing location
+		self.doi = None #string/d.o.i. code 
+		self.link = None #string/weblink
+		self.note = None #string/note,comment
+
 
 
 	def __str__(self):
-		#we update to see if required fields are full
-		self.requiredFieldsCheck()
 		#method for printing object 
-		return "Publication: " + str(self.refKey) + ", type: " + str(self.pubType) + ", required fields filled = "+str(self.requiredFieldsFull)\
-		 +"\n\t Keywords: " + str(self.keywords)
+		return "Publication: " + str(self.refKey) + ", type: " + str(self.pubType)+"\n\t Keywords: " + str(self.keywords)
 
 	def addKeyword(self,keyword):
 		#this adds a keyword to a set 
-		self.keywords.add(keyword)
-
-	def requiredFieldsCheck(self):
-		return False
+		#all keywords are internalized as completely lowercase
+		#this means keywords are NOT SENSITIVE TO CASE
+		self.keywords.add(keyword.lower())
 
 #Article class inherits from publication 
 class Article(Publication):
@@ -40,45 +50,27 @@ class Article(Publication):
 	"""
 	pubType = "article"
 
-	#in the overloaded constructor we set all possible fields to empty or None
-	def __init__(self,user_key):
-		#first we call the base class init
-		Publication.__init__(self,user_key)
-		##now we initialize the specific attributes
-		self.authors = []
-		self.authorsCount = 0
-		self.title = None
-		self.journal = None
-		self.journalVolume = None
-		self.journalNumber = None
-		self.year = None
-		self.doi = None
-		self.link = None
-		self.note = None
-
 	#Required attributes are
 	#Author, Title, Journal, Journal volume, Journal number, Publication year
 	#Further attributes include 
 	#DOI, Link, Keywords, and Notes
 	#One author is required but other authors can be added 
+	#in the overloaded constructor we set certain values as required
+	def __init__(self,refKey,author,title,journal,volume,number,year):
+		#first we call the base class init
+		Publication.__init__(self,refKey)
+		##now we initialize the specific attributes
+		self.authors = []
+		self.authors.append(author)
+		self.title = title
+		self.journal = journal
+		self.volume = volume
+		self.number = number
+		self.year = year
+
 	def addAuthor(self,author):
 		self.authors.append(author)
 		self.authorsCount = len(self.authors)
-
-	def setTitle(self,title):
-		self.title = title
-
-	def setJournalName(self,journal):
-		self.journalName = journal
-
-	def setJournalVolume(self,volume):
-		self.journalVolume = volume
-
-	def setJournalNumber(self,number):
-		self.journalNumber = number
-
-	def setYear(self,year):
-		self.year = year
 
 	def addDOI(self,doi):
 		self.doi = doi
@@ -89,14 +81,6 @@ class Article(Publication):
 	def addNote(self,note):
 		self.note = note
 
-	def requiredFieldsCheck(self):
-		#checks if all required fields are full
-		#returns result of the check
-		#check author count first 
-		self.requiredFieldsFull = ( self.authorsCount > 0 ) and\
-		 not (None in [self.title,self.journalName,self.journalVolume,self.journalNumber,self.year] )
-		return self.requiredFieldsFull
-	
 
 #Book class inherits from publication
 class Book(Publication):
@@ -105,34 +89,31 @@ class Book(Publication):
 	"""
 	pubType = "book"
 
-	#in the overloaded constructor we set all possible fields to empty or None
-	def __init__(self,user_key):
-		#first we call the base class init
-		Publication.__init__(self,user_key)
-		##now we initialize the specific attributes
-		self.authors = []
-		self.authorsCount = 0
-		self.title = None
-		self.publisher = None
-		self.year = None
-
 	#required attributes are 
 	#Author, Title, Publisher, Publishing Year
 	#Additional attributes are 
 	#Link, Keywords, and Notes
 	#One author is required but more can be added 
+	#in the overloaded constructor we set all possible fields to empty or None
+	def __init__(self,refKey,author,title,publisher,year):
+		#first we call the base class init
+		Publication.__init__(self,refKey)
+		##now we initialize the specific attributes
+		self.authors = []
+		self.authors.append(author)
+		self.title = title
+		self.publisher = publisher
+		self.year = year
+
+	
 	def addAuthor(self,author):
 		self.authors.append(author)
-		self.authorsCount = len(self.authors)
 
-	def setTitle(self,title):
-		self.title = title
+	def addLocation(self,location):
+		self.location = location
 
-	def setPublisher(self,publisher):
-		self.publisher = publisher
-
-	def setYear(self,year):
-		self.year = year
+	def addDOI(self,doi):
+		self.doi = doi
 
 	def addLink(self,link):
 		self.link = link
@@ -140,13 +121,6 @@ class Book(Publication):
 	def addNote(self,note):
 		self.note = note
 
-	def requiredFieldsCheck(self):
-		#checks if all required fields are full
-		#returns result of the check
-		#check author count first 
-		self.requiredFieldsFull = ( self.authorsCount > 0 ) and\
-		 not (None in [self.title,self.publisher,self.year] )
-		return self.requiredFieldsFull
 
 #Some default debugging instances of the provided classes 
 debug_publication = Publication("debug_publication")
@@ -154,13 +128,7 @@ debug_publication.addKeyword("Debug")
 debug_publication.addKeyword("Publication")
 debug_publication.addKeyword("Test")
 
-debug_article = Article("debug_article")
-debug_article.addAuthor("First Author")
-debug_article.setTitle("The Title")
-debug_article.setJournalName("Journal Name")
-debug_article.setJournalVolume(500)
-debug_article.setJournalNumber(30)
-debug_article.setYear(2016)
+debug_article = Article(refKey="debug_article",title="An Article",author="First Author",journal="PRL",volume=140,number=30,year=2016)
 debug_article.addDOI("DOI")
 debug_article.addLink("www.thelink.com")
 debug_article.addAuthor("Second Author")
@@ -168,11 +136,7 @@ debug_article.addKeyword("debug")
 debug_article.addKeyword("article")
 debug_article.addKeyword("test")
 
-debug_book = Book("debug_book")
-debug_book.addAuthor("First Author")
-debug_book.setTitle("The Title")
-debug_book.setPublisher("Publisher Name")
-debug_book.setYear(2016)
+debug_book = Book(refKey="debug_book",author="First Author",title="A Book",publisher="The Publisher",year=2017)
 debug_book.addLink("www.thelink.com")
 debug_book.addAuthor("Second Author")
 debug_book.addKeyword("debug")

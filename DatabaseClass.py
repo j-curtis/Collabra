@@ -15,10 +15,18 @@ class Database:
 	def __init__(self,name):
 		#Each database will be given a name 
 		self.name = name
-		self.entryCount = 0	#number of entries in the database
-		#We initialize an empty dictionary
-		self.entries = {}
-		self.entriesSorted = []	#this is a list of the keys in the dictionary, sorted by the most previous sorting method
+
+		self.allEntries = {}	#dictionary of all publications, with keys as the keyRefs
+		self.allCout = 0	#total number of entries in the database
+		self.allSortedKeys = []	#sorted list of keys with most recent global sort applied
+
+		self.articleEntries = {}	#dictionary of articles with keys as the keyRefs 
+		self.articleCount = 0 #number of articles in database 
+		self.articleSortedKeys = [] #sorted list of article keys with most recent article sort applied
+
+		self.bookEntries = {}	#dictionary of books with keys as the keyRefs 
+		self.bookCount = 0	#number of book entries in database
+		self.bookSortedKeys = [] #sorted list of articles keys with most recent book sort applied
 
 	#A method for printing to output 
 	def __str__(self):
@@ -64,25 +72,47 @@ class Database:
 			print "Removed publicaiton \'"+refKey+"\'"
 		return True
 
-	#this method returns the publication with the requested refKey
-	def getRefKey(self,refKey,verbose=False):
+	#this method returns the publication with the requested refKey as a singleton list 
+	#all have verbose which, when true (default is false) will provided more information if an error occurs
+	def getEntry(self,refKey,verbose=False):
 		#if the requested key is not in the database, None is returned 
 		if refKey in list(self.entries.keys()):
-			return self.entries[refKey]
+			return self.entries[refKey] 
 		else:
 			if verbose:
 				print "Error: refKey \'"+refKey+"\' not found in database"			
 			return None
 
-	
-	#These methods sort the database dictionary keys 
-	#This method accepts a set of keywords (keywords_set)
-	#it orders the list of sorted keys from most to fewest keywords in common unless invert is true (default is false)
-	#in which case it orders from fewest in common to most in common
-	def sortByKeywordMatches(self,keywords_query_set,invert=False):
-		self.entriesSorted = sorted(self.entriesSorted,\
-	     key= lambda x: self.entries[x].keywords.intersection(keywords_query_set), reverse=invert)
+	###GENERAL SORT METHODS 
+	#These methods sort the database's internal entriesSorted list of keys 
+	#for all, invert = True reverses sorting order (invert = False by default)
+	#they do not return anything
+	#they are for basic usage only, because more advanced querying can vary by pubType
 
+	#this method alphabetically sorts by refKey
+	#because refKey can be a string of any content, it will use the lexicographic string sort native to Python
+	def sortByRefKey(self,invert=False):
+		self.entriesSorted.sort(reverse=invert)
+
+	#This method accepts a set of keywords (keywords_set)
+	#it orders the list of keys by number of keywords intersecting with the the query set 
+	#we first convert the set of query keywords to all lowercase strings
+	def sortByKeywordMatches(self,query_keyword_set,invert=False):
+		query_keyword_set = {x.lower() for x in query_keyword_set}
+		self.entriesSorted = sorted(self.entriesSorted,\
+	     key= lambda x: self.entries[x].keywords.intersection(query_keyword_set), reverse= not invert)
+
+	#This method sorts by pubType, alphabetically 
+	def sortByPubType(self,invert=False):
+		self.entriesSorted = sorted(self.entriesSorted,\
+			key=lambda x: self.entries[x].pubType,reverse= invert)
+
+	###TYPE SORT METHODS
+	#These methods are specialized by pubType and can yield more useful query results 
+	def articleSortByRefKey(invert=False):\
+		forself.entries.keys().sort(reverse=invert) )
+
+	
 
 debug_database = Database("debug_database")
 debug_database.addPublication(PublicationClasses.debug_article)
@@ -90,11 +120,7 @@ debug_database.addPublication(PublicationClasses.debug_book)
 
 def main():
 	print debug_database
-	print debug_database.entriesSorted
-	debug_database.sortByKeywordMatches({"article"})
-	print debug_database.entriesSorted
-	debug_database.sortByKeywordMatches({"article"},invert = True)
-	print debug_database.entriesSorted
+	
 
 if __name__ == "__main__":
 	main()
