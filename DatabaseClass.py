@@ -18,7 +18,6 @@ class Database:
 		#Each database will be given a name 
 		self.name = name
 		self.entries = {}	#dictionary of all publications, with keys as the keyRefs
-		self.sortedRefKeys = []	#sorted list of keys with most recent global sort applied
 		self.entriesCount = 0	#total number of entries in the database
 
 	#A method for printing to output 
@@ -38,7 +37,6 @@ class Database:
 
 		self.entries[publication.refKey] = publication
 		self.entriesCount = len(self.entries.keys())	#update size 
-		self.sortedRefKeys.append(publication.refKey)	#updates list of keys. Appends added key to the end of the sorted list 
 		if verbose:
 			print "Added publication \'"+publication.refKey+"\'"
 		return True
@@ -54,7 +52,6 @@ class Database:
 		#it is in the database so we remove it 
 		del(self.entries[refKey])
 		self.entryCount = len(self.entries.keys())
-		self.sortedRefKeys = list(self.entries.keys())	#updates the list of keys. Goes to default sorting (could be random) 
 		if verbose:
 			print "Removed publicaiton \'"+refKey+"\'"
 		return True
@@ -72,11 +69,13 @@ class Database:
 	
 
 debug_database = Database("debug_database")
-debug_database.addPublication(PublicationClasses.debug_article)
-debug_database.addPublication(PublicationClasses.debug_book)
+debug_database.addPublication(PublicationClass.debug_pub_article)
+debug_database.addPublication(PublicationClass.debug_pub_book)
 
 def main():
-	
+	print debug_database
+	print debug_database.getEntry(PublicationClass.debug_pub_article.refKey)
+	print debug_database.getEntry(PublicationClass.debug_pub_book.refKey)
 	
 
 if __name__ == "__main__":
