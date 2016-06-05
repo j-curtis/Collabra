@@ -7,6 +7,7 @@
 #It doesn't do searching/sorting just stores the entries 
 #It also handles the file I/O of storing/loading the database files 
 import PublicationClass
+import json
 
 class Database:
 	"""
@@ -67,15 +68,47 @@ class Database:
 				print "Error: refKey \'"+refKey+"\' not found in database"			
 			return None
 	
+	#this method turns the entire database into a string JSON representation
+	def toJSONString(self):
+		#first we convert all the Publication entries into their JSON string representations
+		#we then add them to a list of the JSON string representations 
+		entries_list = []
 
+		for key,value in self.entries.iteritems():
+			entries_list.append(value.toJSONString())
+
+		obj_dict = self.__dict__
+		obj_dict["entries"] = entries_list
+
+		return json.dumps(obj_dict)
+
+
+	#this method loads from a JSON string object 
+	@classmethod
+	def fromJSONString(cls,JSONString):
+		#Frist we convert the JSON string into a dictionary
+		obj_dict = json.loads(JSONString)
+		obj_class = cls(obj_dict["name"])
+
+		#we have recreated the database, but it is empty
+		#now we loop through the list and add entries 
+		for entry in obj_dict["entries"]:
+			publication = PublicationClass.Publication.fromJSONString(entry)
+			obj_class.addPublication(publication)
+
+		return obj_class
+		
 debug_database = Database("debug_database")
 debug_database.addPublication(PublicationClass.debug_pub_article)
 debug_database.addPublication(PublicationClass.debug_pub_book)
 
 def main():
 	print debug_database
-	print debug_database.getEntry(PublicationClass.debug_pub_article.refKey)
-	print debug_database.getEntry(PublicationClass.debug_pub_book.refKey)
+	debug_database_JSON_string_repr =  debug_database.toJSONString()
+	print debug_database_JSON_string_repr
+	debug_database_from_JSON = Database.fromJSONString(debug_database_JSON_string_repr)
+	print debug_database_from_JSON
+	print debug_database_from_JSON.getEntry("debug_pub_article").toJSONString()
 	
 
 if __name__ == "__main__":

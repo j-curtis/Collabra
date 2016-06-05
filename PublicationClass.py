@@ -12,14 +12,12 @@ class Publication:
 	Initializiation requires a user input string for it's reference key.
 	"""
 	def __init__(self, refKey):
-		#all attributes are strings/ints/lists of strings/ints (except for keywords)
-		#each attribute is typically a single element, though some are lists 
+		#all attributes are strings/ints/lists of strings/ints 
 		#refKey must be unique
 		self.refKey = refKey #unique identifier for internal/citation reference
 		self.pubType = None	#the type of publication. This is a constant for each class 
-		self.keywords = set([])	#optional set of keywords
-								#keywords is a set of strings that are relevant to the entry 
-		self.author = []	#string(list)/authors 
+		self.keywords = []	#optional list of keywords relevant for searching for the article
+		self.authors = []	#string(list)/authors 
 		self.title = None	#string/title 
 		self.journal = None	#string/journal name 
 		self.volume = None	#string/journal volume
@@ -29,7 +27,7 @@ class Publication:
 		self.location = None #string/publishing location
 		self.doi = None #string/d.o.i. code 
 		self.link = None #string/weblink
-		self.note = [] #string(list)/note,comment
+		self.notes = [] #string(list)/note,comment
 
 	def __str__(self):
 		#method for printing object 
@@ -39,29 +37,25 @@ class Publication:
 		#this adds a keyword to a set 
 		#all keywords are internalized as completely lowercase
 		#this means keywords are NOT SENSITIVE TO CASE
-		self.keywords.add(keyword.lower())
+		self.keywords.append(keyword.lower())
 
 	def toJSONString(self):
 		#We create a string representing the JSON format of this object 
-		objDict = self.__dict__	#convert class to dictionary object 
-		objDict["keywords"] = list(objDict["keywords"])	#convert keywords from set to list 
-		return json.dumps(objDict)	#converts object to dictionary then to a string 
+		obj_dict = self.__dict__	#convert class to dictionary object 
+		return json.dumps(obj_dict)	#converts object to dictionary then to a string 
 
 	@classmethod
 	def fromJSONString(cls,JSONString):
 		#this method will serve as a constructor for a Publication object by parsing a JSON string 
 		#it will be overloaded upon inheritance
-		objDict = json.loads(JSONString)
-		objClass = cls(refKey = objDict["refKey"])
+		obj_dict = json.loads(JSONString)
+		obj_class = cls(refKey = obj_dict["refKey"])
 		
 		#we take advantage of the fact that each object in python has a dictionary representation to fill all the other attributes as well
-		for key in objDict.keys():
-			objClass.__dict__[key] = objDict[key]
+		for key in obj_dict.keys():
+			obj_class.__dict__[key] = obj_dict[key]
 
-		#finally, we convert the keywords into the correct format (a set of strings)
-		objClass.keywords = {str(s).lower() for s in objClass.keywords}
-
-		return objClass
+		return obj_class
 
 	#PREDEFINED PUBLICATION TYPES WITH REQUIRED FIELDS
 	
@@ -73,7 +67,7 @@ class Publication:
 	#One author is required but other authors can be added 
 	def addArticle(self,author,title,journal,volume,number,year):
 		self.pubType = "article"
-		self.author.append(author)
+		self.authors.append(author)
 		self.title = title
 		self.journal = journal
 		self.volume = volume
@@ -88,7 +82,7 @@ class Publication:
 	#One author is required but more can be added 
 	def addBook(self,author,title,publisher,year):
 		self.pubType = "book"
-		self.author.append(author)
+		self.authors.append(author)
 		self.title = title
 		self.publisher = publisher
 		self.year = year
@@ -96,7 +90,7 @@ class Publication:
 	#Methods for adding optional fields
 
 	def addAuthor(self,author):
-		self.author.append(author)
+		self.authors.append(author)
 
 	def addDOI(self,doi):
 		self.doi = doi
@@ -105,7 +99,7 @@ class Publication:
 		self.link = link
 
 	def addNote(self,note):
-		self.note.append(note)
+		self.notes.append(note)
 
 	def addLocation(self,location):
 		self.location = location
