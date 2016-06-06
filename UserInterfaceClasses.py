@@ -1,51 +1,83 @@
 #Collabra 
 #Jonathan Curtis, June 5, 2016
 
-#This file is the class file for the command-line user interface 
+#This file details the various user interface classes 
 import DatabaseClass
 import PublicationClass
+import sys
 
-#this class handles user interfacing through the command line 
-#an instance of this class is known as a 'session'
-#in a session, the user can issue commands
-#each session may have up to one database active at once
-#when a database (DB) is under the scope of the session, it is 'mounted'
-class CommandLineSession:
+class Session:
 	"""
-	Class for interfacing with database(s) through the command line.
+	Class for user interfacing with database files.
 	"""
 	
 	def __init__(self):
 		#We initialize all attributes to None
 		
-		#DB management
-		self.databaseName = None	#the name of the current mounted database 
+		#DB management attribute variables 
 		self.databaseFilePath = None #the full /path/to/file/name.extension
 		self.database = None	#the internal representation of the mounted database 
 
-	#USER COMMANDS 
-	##DB management commands
+		#Input/Output variables
+		self.input = None	#the current input from the user to the session
+		self.output = None 	#the current output from the session to the user (how commands return values to the user)
 
-	###Returns the name of the mounted DB 
-	def commandDBGetName(self):
-		return self.databaseName
+	
+#Classes for session commands
+class Command:
+	"""
+	Class for session commands.
+	Each command, when it is called, is passed a session. It acts on this session when it is called.
+	Base class is a general command structure and derived classes are specific commands.
+	"""
+	def __init__(self,session):
+		self.session = session 	#the session the command is acting on 
+		self.commandName = None	#name of the command called (string)
 
-	###Returns the location of the mounted DB
-	def commandDBGetFilePath(self):
-		return self.databaseLocation
+	#returns the command name as the string representation of the object 
+	def __str__(self):
+		return self.commandName 
 
-	###Unmounts the current database 
-	###It does NOT save the DB before unmounting it 
-	def commandDBUnmount(self):
-		self.database = None
-		self.databaseName = None 
-		self.databaseFilePath = None 
+class GetDBName(Command):
+	def __init__(self,session):
+		Command.__init__(self,session)	#Call the parent constructor first
+		self.commandName = "get-db-name"	#the command name for this command 
 
-	###Mounts the database whose location is passed 
-	###If there is a database currently mounted, that one is unmounted (and is NOT saved)
-	def commandDBMount(self,databaseFilePath):
-		#Unmount any currently mounted databases
-		self.commandDBUnmount()
+		#here is where we actually implement the command action 
+		self.session.output = self.session.database.name 
+
+class GetDBSize(Command):
+	def __init__(self,session):
+		Command.__init__(self,session)	#Call the parent constructor first
+		self.commandName = "get-db-size"	#the command name for this command 
+
+		#here is where we actually implement the command action 
+		self.session.output = self.session.database.entryCount 
+
+class GetDBFilePath(Command):
+	def __init__(self,session):
+		Command.__init__(self,session)
+		self.commandName = "get-db-file-path"
+
+		self.session.output = self.session.databaseFilePath
+
+class Unmount(Command):
+	def __init__(self,session):
+		Command.__init__(self,session)
+		self.commandName = "unmount"
+
+		self.session.output = "Unmounting current database..."
+		self.session.database = None 
+		self.session.databaseFilePath = None 
+
+class Mount(Command):
+	def __init__(self,session,filePath):
+		Command.__init__(self,session)
+		self.commandName = "mount"
+
+		self.session.output = "Mounting database located at "+filePath+"..."
+		self.session.databaseFilePath = filePath #change locations to the new database file 
+		self.session.database = 
 
 
 

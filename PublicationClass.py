@@ -30,14 +30,8 @@ class Publication:
 		self.notes = [] #string(list)/note,comment
 
 	def __str__(self):
-		#method for printing object 
+		#method for quick printing object details 
 		return "Publication: " + str(self.refKey) + ", type: " + str(self.pubType)+"\n\t Keywords: " + str(self.keywords)
-
-	def addKeyword(self,keyword):
-		#this adds a keyword to a set 
-		#all keywords are internalized as completely lowercase
-		#this means keywords are NOT SENSITIVE TO CASE
-		self.keywords.append(keyword.lower())
 
 	def toJSONString(self):
 		#We create a string representing the JSON format of this object 
@@ -103,6 +97,12 @@ class Publication:
 
 	def addLocation(self,location):
 		self.location = location
+
+	def addKeyword(self,keyword):
+		#this adds a keyword to a set 
+		#all keywords are internalized as completely lowercase
+		#this means keywords are NOT SENSITIVE TO CASE
+		self.keywords.append(keyword.lower())
 
 debug_pub_article = Publication("debug_pub_article")
 debug_pub_article.addArticle(author="First Author",title="An Article",journal="Prestigous Journal",volume="300",number="43",year=2016)
