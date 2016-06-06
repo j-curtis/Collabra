@@ -93,7 +93,7 @@ class Article(Publication):
 #constructor has all required fields as required arguments 
 class Book(Publication):
 	def __init__(self,objName,title,author,year,publisher):
-		Publication.__init__(self,objName,title,author,year,publisher)
+		Publication.__init__(self,objName,title,author,year)
 
 		self.objType = self.objType + ".book"
 
@@ -112,6 +112,26 @@ class Book(Publication):
 		self.editor = editor 
 
 
+debug_obj = Object("debug_obj")
+debug_pub = Publication(objName="debug_pub",title="A Publication",author="First Author",year=2016)
+debug_article = Article(objName="debug_article",title="An Article",author="First Author",year=2017,journal="A Journal",volume="300",number="40")
+debug_book = Book(objName="debug_book",title="A Book",author="First Author",year=2018,publisher="A Publisher")
+
+def main():
+	print debug_obj
+	print debug_obj.toJSONString()
+	print
+	print debug_pub
+	print debug_pub.toJSONString()
+	print
+	print debug_article
+	print debug_article.toJSONString()
+	print
+	print debug_book
+	print debug_book.toJSONString()
+
+if __name__ == "__main__":
+	main()
 
 
 
