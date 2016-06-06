@@ -78,7 +78,7 @@ class Publication(Object):
 		self.doi = doi
 
 #a derived class for article publications 
-#constructor has all required fields as required arguments 
+#an article, in addition to author/title/year, also requires journal name/volume/number
 class Article(Publication):
 	def __init__(self,objName,title,author,year,journal,volume,number):
 		Publication.__init__(self,objName,title,author,year)
@@ -90,7 +90,7 @@ class Article(Publication):
 		self.number = number 
 
 #a derived class for book publications 
-#constructor has all required fields as required arguments 
+#a book, in addition to author/title/year, also requires a publisher
 class Book(Publication):
 	def __init__(self,objName,title,author,year,publisher):
 		Publication.__init__(self,objName,title,author,year)
@@ -111,24 +111,39 @@ class Book(Publication):
 	def addEditor(self,editor):
 		self.editor = editor 
 
+#a derived class for Author and Author-like objects
+#an author only requires a name (author name, not the object name)
+class Author(Object):
+	def __init__(self,objName,name):
+		Object.__init__(self,objName)
 
-debug_obj = Object("debug_obj")
-debug_pub = Publication(objName="debug_pub",title="A Publication",author="First Author",year=2016)
-debug_article = Article(objName="debug_article",title="An Article",author="First Author",year=2017,journal="A Journal",volume="300",number="40")
-debug_book = Book(objName="debug_book",title="A Book",author="First Author",year=2018,publisher="A Publisher")
+		self.objType = self.objType+".author"
+
+		self.name = name 
+		self.institutions = []	#a list of institutions the author is affiliated with
+		self.links = []	#a list of links relevant to the author 
+		self.emails = []	#a list of emails for contacting the author 
+		self.collaborators = [] #a list(is list best way?) of common collaborators (other author instances)
+
+
+#sample instances of objects useful for debugging
+_debug_obj = Object("debug_obj")
+_debug_pub = Publication(objName="debug_pub",title="A Publication",author="First Author",year=2016)
+_debug_article = Article(objName="debug_article",title="An Article",author="First Author",year=2017,journal="A Journal",volume="300",number="40")
+_debug_book = Book(objName="debug_book",title="A Book",author="First Author",year=2018,publisher="A Publisher")
 
 def main():
-	print debug_obj
-	print debug_obj.toJSONString()
+	print _debug_obj
+	print _debug_obj.toJSONString()
 	print
-	print debug_pub
-	print debug_pub.toJSONString()
+	print _debug_pub
+	print _debug_pub.toJSONString()
 	print
-	print debug_article
-	print debug_article.toJSONString()
+	print _debug_article
+	print _debug_article.toJSONString()
 	print
-	print debug_book
-	print debug_book.toJSONString()
+	print _debug_book
+	print _debug_book.toJSONString()
 
 if __name__ == "__main__":
 	main()
