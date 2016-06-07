@@ -5,7 +5,8 @@
 #we start with a base class object (Object)
 #Object can then be derived into the various classes such as Publication, Database, and other possible classes 
 #all objects will have a name attribute (unique) and a type identifier (quick string identifying the class)
-#all objects will have a string representation defined and a to/from JSON method defined 
+#all objects will have a string representation defined via __str__ method, a representation via __repr__ method, and a to/from JSON method defined 
+#the __repr__ method will represent the object as its JSON string. If the member attribute is itself of type Object, it will recursively apply __repr__ 
 
 #object types will be of the form 'obj.derivedTypeName'
 #names must be unique for each object in the current scope 
@@ -14,7 +15,8 @@
 import json 
 
 #Base class of the program 
-class Object:
+#uses Python 'new classes' style, which only works for Python 2.2 and up
+class Object(object):
 	def __init__(self,objName):
 		#object types will be of the form '.obj.derivedTypeName'
 		#names must be unique for each object in the current scope
@@ -25,15 +27,24 @@ class Object:
 		#the string representation will be given as 'objType/objName'
 		return self.objType+"/"+self.objName
 
+	def __repr__(self):
+		#we recursively represent the object as the string of JSON formatted representation
+		#if a member is itself an Object type, we represent it as the __repr__ of that object
+		obj_dict = self.__dict__ #obtain dictionary representation of the object 
+		{ key:value.__repr__() for key,value in obj_dict.iteritems()}	#via list comprehension recursively apply __repr__ to each element in the dictionary
+		return obj_dict.__repr__()
+
 	def toJSONString(self):
 		#converts the object to a JSON formatted string representation
-		return json.dumps(self.__dict__)
+		return json.dumps(self.__repr__())
 
 	@classmethod
 	def fromJSONString(cls,JSONString):
 		#constructs an object given its JSON formatted string representation 
 		#we take advantage of the fact that python can represent a class as a dictionary internally 
 		obj_dict = json.loads(JSONString)
+		print obj_dict
+
 		obj_class = cls(objName = obj_dict["objName"])
 
 		for attr in list(obj_dict.keys()):
@@ -111,6 +122,47 @@ class Book(Publication):
 	def addEditor(self,editor):
 		self.editor = editor 
 
+#a derived class used to database objects
+#a databse has no required attributes
+#objects will be stored in a dictionary, indexed by their objName (hence objName must be unique)
+class Database(Object):
+	def __init__(self,objName):
+		Object.__init__(self,objName)
+
+		self.objType = self.objType+".db"
+
+		self.entries = {}	#dictionary used to store entries, with keys provided by the objects objName attribute
+
+	def addObject(self,obj):
+		#we first check to see if the name of the object is already in the database 
+		#we require all names in a database to be unique, so if the name is already present, we dont add the object 
+		if obj.objName in self.entries.keys():
+			return "Error: \'"+obj.objName+"\' already present in database. Cannot duplicate \'"+obj.objName+"\'"
+
+		#it is not in the database already, we add it to the list and add the name to the names list 
+		self.entries[obj.objName] = obj
+		return "\'"+str(obj)+"\' added to database"
+
+	def removeObject(self,objName):
+		#removes the object in the database with name objName 
+		#because the names are unique, this is relatively straightforward to do 
+
+		#check for membership in the database 
+		if not objName in self.entries.keys():
+			return "Error: \'"+objName+"\' cannot be removed. \'"+objName+"\' is not a member of database"
+
+		#it is in the database, so we remove it 
+		del self.entries[objName]
+		
+	def getObject(self,objName):
+		#returns the object in the database with the given objName 
+		if objName in self.entries.keys():
+			return self.entries[objName]
+
+		#in this case, it is not in the database, so we return None 
+		return None 
+
+"""THESE CLASSES WILL BE USED TO ADD NEW FUNCTIONALITIES IN FURTHER BUILDS"""
 #a derived class for Author and Author-like objects
 #an author only requires a name (author name, not the object name)
 class Author(Object):
@@ -126,11 +178,19 @@ class Author(Object):
 		self.collaborators = [] #a list(is list best way?) of common collaborators (other author instances)
 
 
+
+
 #sample instances of objects useful for debugging
 _debug_obj = Object("debug_obj")
-_debug_pub = Publication(objName="debug_pub",title="A Publication",author="First Author",year=2016)
-_debug_article = Article(objName="debug_article",title="An Article",author="First Author",year=2017,journal="A Journal",volume="300",number="40")
-_debug_book = Book(objName="debug_book",title="A Book",author="First Author",year=2018,publisher="A Publisher")
+_debug_pub = Publication(objName="_debug_pub",title="A Publication",author="First Author",year=2016)
+_debug_article = Article(objName="_debug_article",title="An Article",author="First Author",year=2017,journal="A Journal",volume="300",number="40")
+_debug_book = Book(objName="_debug_book",title="A Book",author="First Author",year=2018,publisher="A Publisher")
+
+_debug_db = Database(objName="_debug_db")
+_debug_db.addObject(_debug_obj)
+_debug_db.addObject(_debug_pub)
+_debug_db.addObject(_debug_article)
+_debug_db.addObject(_debug_book)
 
 def main():
 	print _debug_obj
@@ -144,6 +204,14 @@ def main():
 	print
 	print _debug_book
 	print _debug_book.toJSONString()
+	print 
+	print _debug_db
+	_debug_db_JSON = _debug_db.toJSONString()
+	#print _debug_db_JSON
+	print 
+	_debug_db_from_JSON = Database.fromJSONString(_debug_db_JSON)
+	print _debug_db_from_JSON
+	print _debug_db_from_JSON.toJSONString()
 
 if __name__ == "__main__":
 	main()
