@@ -5,14 +5,14 @@
 #we start with a base class object (Object)
 #Object can then be derived into the various classes such as Publication, Database, and other possible classes 
 #all objects will have a name attribute (unique) and a type identifier (quick string identifying the class)
-#all objects will have a string representation defined via __str__ method, a representation via __repr__ method, and a to/from JSON method defined 
-#the __repr__ method will represent the object as its JSON string. If the member attribute is itself of type Object, it will recursively apply __repr__ 
+#all objects will have a string representation defined via __str__ method and a to/from JSON method defined 
 
 #object types will be of the form 'obj.derivedTypeName'
 #names must be unique for each object in the current scope 
 #the string representation will be given as 'objType/objName'
 
 import json 
+import pickle 
 
 #Base class of the program 
 #uses Python 'new classes' style, which only works for Python 2.2 and up
@@ -27,27 +27,29 @@ class Object(object):
 		#the string representation will be given as 'objType/objName'
 		return self.objType+"/"+self.objName
 
-	def __repr__(self):
-		#we recursively represent the object as the string of JSON formatted representation
-		#if a member is itself an Object type, we represent it as the __repr__ of that object
-		obj_dict = self.__dict__ #obtain dictionary representation of the object 
-		{ key:value.__repr__() for key,value in obj_dict.iteritems()}	#via list comprehension recursively apply __repr__ to each element in the dictionary
-		return obj_dict.__repr__()
-
 	def toJSONString(self):
 		#converts the object to a JSON formatted string representation
-		return json.dumps(self.__repr__())
+		#if the object has a JSON representation function, we call that 
+		#otherwise we use the normal representation
+		#should work by representing class attributes as their JSON representations
+		obj_dict = {}
+		for k,v in self.__dict__.iteritems():
+			if hasattr(v,"toJSONString"):
+				obj_dict[k] = v.toJSONString()  
+			else:
+				obj_dict[k] = v 
+
+		return json.dumps(obj_dict)
 
 	@classmethod
 	def fromJSONString(cls,JSONString):
 		#constructs an object given its JSON formatted string representation 
 		#we take advantage of the fact that python can represent a class as a dictionary internally 
 		obj_dict = json.loads(JSONString)
-		print obj_dict
 
 		obj_class = cls(objName = obj_dict["objName"])
 
-		for attr in list(obj_dict.keys()):
+		for attr in obj_dict.keys():
 			obj_class.__dict__[attr] = obj_dict[attr]
 
 		return obj_class
@@ -194,10 +196,16 @@ _debug_db.addObject(_debug_book)
 
 def main():
 	print _debug_obj
+	_debug_obj_JSON = _debug_obj.toJSONString()
+	_debug_obj_from_JSON = Object.fromJSONString(_debug_obj_JSON)
 	print _debug_obj.toJSONString()
+	print _debug_obj_from_JSON.toJSONString()
 	print
 	print _debug_pub
+	_debug_pub_JSON = _debug_pub.toJSONString()
+	_debug_pub_from_JSON = Publication.fromJSONString(_debug_pub_JSON)
 	print _debug_pub.toJSONString()
+	print _debug_pub_from_JSON.toJSONString()
 	print
 	print _debug_article
 	print _debug_article.toJSONString()
@@ -207,11 +215,9 @@ def main():
 	print 
 	print _debug_db
 	_debug_db_JSON = _debug_db.toJSONString()
-	#print _debug_db_JSON
+	print _debug_db_JSON
 	print 
-	_debug_db_from_JSON = Database.fromJSONString(_debug_db_JSON)
-	print _debug_db_from_JSON
-	print _debug_db_from_JSON.toJSONString()
+
 
 if __name__ == "__main__":
 	main()
