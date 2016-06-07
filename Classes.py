@@ -5,14 +5,13 @@
 #we start with a base class object (Object)
 #Object can then be derived into the various classes such as Publication, Database, and other possible classes 
 #all objects will have a name attribute (unique) and a type identifier (quick string identifying the class)
-#all objects will have a string representation defined via __str__ method and a to/from JSON method defined 
 
 #object types will be of the form 'obj.derivedTypeName'
 #names must be unique for each object in the current scope 
 #the string representation will be given as 'objType/objName'
 
-import json 
-import pickle 
+import jsonpickle as jsp
+#we will use the module jsonpickle to encode/decode classes into JSON objects for exchange/storage 
 
 #Base class of the program 
 #uses Python 'new classes' style, which only works for Python 2.2 and up
@@ -28,32 +27,14 @@ class Object(object):
 		return self.objType+"/"+self.objName
 
 	def toJSONString(self):
-		#converts the object to a JSON formatted string representation
-		#if the object has a JSON representation function, we call that 
-		#otherwise we use the normal representation
-		#should work by representing class attributes as their JSON representations
-		obj_dict = {}
-		for k,v in self.__dict__.iteritems():
-			if hasattr(v,"toJSONString"):
-				obj_dict[k] = v.toJSONString()  
-			else:
-				obj_dict[k] = v 
-
-		return json.dumps(obj_dict)
+		return jsp.encode(self)
 
 	@classmethod
 	def fromJSONString(cls,JSONString):
 		#constructs an object given its JSON formatted string representation 
-		#we take advantage of the fact that python can represent a class as a dictionary internally 
-		obj_dict = json.loads(JSONString)
-
-		obj_class = cls(objName = obj_dict["objName"])
-
-		for attr in obj_dict.keys():
-			obj_class.__dict__[attr] = obj_dict[attr]
-
-		return obj_class
-
+		#uses jsonpickles decode method
+		return jsp.decode(JSONString)
+		
 #a derived class for Publications of various types 
 #we assume that all publications have an author, title, and year field
 class Publication(Object):
@@ -215,8 +196,9 @@ def main():
 	print 
 	print _debug_db
 	_debug_db_JSON = _debug_db.toJSONString()
-	print _debug_db_JSON
-	print 
+	_debug_db_from_JSON = Database.fromJSONString(_debug_db_JSON)
+	print _debug_db.toJSONString()
+	print _debug_db_from_JSON.toJSONString()
 
 
 if __name__ == "__main__":
