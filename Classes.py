@@ -56,9 +56,14 @@ class Publication(Object):
 		self.notes = []
 		self.doi = None 
 
-	#this method adds an author to the list of authors 
 	def addAuthor(self,author):
-		self.authors.append(author)
+		#adss the author only if they aren't already on the author list
+		if not author in self.authors:
+			self.authors.append(author)
+
+	def addAuthors(self,author_list):
+		for author in author_list:
+			self.addAuthor(author)
 
 	def addKeyword(self,keyword):
 		#adds a keyword but only if it isn't already in the keywords list
@@ -66,9 +71,9 @@ class Publication(Object):
 		if not keyword.lower() in self.keywords:
 			self.keywords.append(keyword.lower())
 
-	def addKeywords(self,list_of_keywords):
+	def addKeywords(self,keyword_list):
 		#adds each keyword in list_of_keywords
-		for keyword in list_of_keywords:
+		for keyword in keyword_list:
 			self.addKeyword(keyword)
 
 	def addNote(self,note):
@@ -146,44 +151,133 @@ class Database(Object):
 		#it is in the database, so we remove it 
 		del self.entries[objName]
 		
-	def getObjects(self,list_of_objNames=[]):
+	def getObjects(self,objName_list=[]):
 		#retuns a list of objects in the database with an objName in the list 
 		#order of the objects is the same as the order of the objNames in the passed list
-		return [self.entries[k] for k in list_of_objNames if k in self.entries.keys()]
+		return [self.entries[k] for k in objName_list if k in self.entries.keys()]
 
-#these functions perform a search or sort on a dictionary of objects 
-#they are not part of the dictionary object but the intention is that they be used to search through the database dictionary
-#the first argument is obj_dict and is the dictionary of objects fed in
-#the second argument is keys_list and is an ordered list of dictionary keys 
-#subsequent arguments are various query related arguments 
-#returns a list of keys that represents the keys satisfying the query in the specified order 
+	def getEntryList(self):
+		#returns a list of all the objNames (or equivalently, of the keys) in the database entry dictionary
+		#return list is unordered
+		return self.entries.keys()
 
-#searches in the list of keys for objects that are in the set of specified objTypes
-#returns order is arbitrary
-def searchObjTypes(keys_list,obj_dict,list_of_objTypes=[".obj.pub",".obj.pub.article",".obj.pub.book"]):
-	"""looks through keys_list and picks the entries out of obj_dict that have an objType in the passed list
-	return order is arbitrary"""
-	return [k for k in keys_list if k in obj_dict.keys() and obj_dict[k].objType in list_of_objTypes]
+	#These functions can be used to search through the database and may be concatenated 
+	#the first argument is keys_list and is an ordered list of objNames for entries in the database
+	#subsequent arguments are various query related arguments 
+	#returns a list of keys that represents the keys satisfying the query in the specified order
+	#default is to search through all entries (at least for which the given query field is defined) 
+	#(if keys_list==None it is replaced by self.getEntryList())
 
-#searches through the list of keys for objects that have keywords within the query set
-#only can search through objects that have a keyword field defined 
-#return order is sorted by number of matching keywords (most to least)
-def searchKeywords(keys_list,obj_dict,list_of_keywords=[]):
-	"""searches through keys_list and picks the entries out of obj_dict that have keywords in the list_of_keywords set
-	return order is sorted from most matching keywords to fewest
-	search is case insensitive"""
-	#we make the query set case insensitive by converting all the strings to lowercase
-	list_of_keywords_lower = map(lambda x: x.lower(), list_of_keywords)
+	#searches in the list of keys for objects that are in the set of specified objTypes
+	#returns order is arbitrary
+	def searchObjTypeList(self,keys_list=None,objType_list=[".obj.pub",".obj.pub.article",".obj.pub.book"]):
+		"""looks through keys_list and picks the entries out of the database that have an objType in the passed list
+		return order is arbitrary"""
+		if not keys_list:
+			keys_list = self.getEntryList()
 
-	#we define a function that checks how many elements are in common between the query set and the keywords set 
-	def numInCommon(list1,list2):
-		return len(set(list1)&set(list2))
-	
-	#get keys whose value has some intersection with the query set 
-	r_keys = filter(lambda x: numInCommon(obj_dict[x].keywords,list_of_keywords) > 0, keys_list)
-	r_keys.sort(key=lambda x: numInCommon(obj_dict[x].keywords,list_of_keywords) ,reverse=True)
+		return [k for k in keys_list if k in self.getEntryList() and self.entries[k].objType in objType_list]
 
-	return r_keys
+	#like searchObjTypes but searches for objects that have an objType whose beginning matches queryType
+	#can be used to search by inheritence so that all objects with an objType that has a certain first part are caught
+	#return order is arbitrary
+	def searchObjTypeDerive(self,keys_list=None,query_objType=".obj.pub"):
+		"""searches through keys_list and selects the keys for which the entry in the database
+		has an objType string that begins with the string query_objType
+		return order is arbitrary
+		"""
+		if not keys_list:
+			keys_list = self.getEntryList()
+			
+		return [k for k in keys_list if k in self.getEntryList() and self.entries[k].objType[:len(query_objType)] == query_objType]
+
+	#searches through the list of keys for objects that have keywords within the query set
+	#only can search through objects that have a keyword field defined 
+	#return order is sorted by number of matching keywords (most to least)
+	def searchKeywords(self,keys_list=None,keyword_list=[]):
+		"""searches through keys_list and picks the entries out of the databsae that have keywords in the list_of_keywords set
+		return order is sorted from most matching keywords to fewest
+		search is case insensitive"""
+		if not keys_list:
+			keys_list = self.getEntryList()
+			
+		#we make the query set case insensitive by converting all the strings to lowercase
+		list_of_keywords_lower = map(lambda x: x.lower(), keyword_list)
+
+		#we define a function that checks how many elements are in common between the query set and the keywords set 
+		def numInCommon(list1,list2):
+			return len(set(list1)&set(list2))
+		
+		#get keys whose value has some intersection with the query set 
+		r_keys = [k for k in self.searchObjTypeDerive(keys_list,query_objType=".obj.pub") if numInCommon(self.entries[k].keywords,list_of_keywords_lower)>0 ]
+		r_keys.sort(key=lambda x: numInCommon(self.entries[x].keywords,list_of_keywords_lower), reverse=True)
+		return r_keys
+
+	#searches through the list of keys for entries that have all the authors in the given list
+	#can only search through publications as they are the only ones with author fields
+	#return order is arbitrary
+	def searchAuthors(self,keys_list=None,author_list=[]):
+		"""searches through keys_list and picks the entries out of the database that have all the authors in the specified list
+		return order is arbtitrary
+		search is case sensitive"""
+		if not keys_list:
+			keys_list = self.getEntryList()
+			
+		#only select keys for which all the authors in the query list are in the obj.authors set
+		return [k for k in self.searchObjTypeDerive(keys_list) if set(author_list).issubset(self.entries[k].authors)]
+
+	#performs a generic attr = query search on the keys which reference objects in obj_dict 
+	#first checks to see if attr is defined for the object and if so, checks if it is == query 
+	#return order is arbitrary
+	#default query values are to search by "objType"==".obj.pub"
+	def searchAttribute(self,keys_list=None,attribute="objType",value=".obj.pub"):
+		"""searches through keys_list and picks the entries for which the object in the database has attribute defined and == value
+		return order is arbitrary
+		default is to search attribute='objType' and attribute(value)=='.obj.pub' ""
+		"""
+		if not keys_list:
+			keys_list = self.getEntryList()
+			
+		return [k for k in keys_list if k in self.getEntryList() and hasattr(self.entries[k],attribute) and getattr(self.entries[k],attribute) == value ]
+
+	#sorts the keys_list by year
+	#year field must be defined which means that this only works on publications 
+	#sorts so that newest is first 
+	def sortByYear(self,keys_list=None,invert=False):
+		"""sorts publicaitons in keys_list by the year of the corresponding database entry
+		return order is so that [0] is newest and [-1] is oldest unless invert is specified as true (default is false)
+		"""
+		if not keys_list:
+			keys_list = self.getEntryList()
+			
+		r_list = self.searchObjTypeDerive(keys_list,query_objType=".obj.pub")
+
+		r_list.sort(key=lambda x : self.entries[x].year,reverse=not invert)
+		return r_list
+
+	#sorts the publications in keys_list alphabetically by first author using the standard python lexigraphic comparison method
+	#return order is from A to a to Z to z (or equivalent python default ordering)
+	def sortByFirstAuthor(self,keys_list=None):
+		"""sorts publications in keys_list alphabetically by the first author of the corresponding database entry
+		return order is 0 to 9 to A to a to Z to z to special characters"""
+		if not keys_list:
+			keys_list = self.getEntryList()
+			
+		r_list = self.searchObjTypeDerive(keys_list,query_objType=".obj.pub")
+		r_list.sort(key = lambda x: self.entries[x].authors[0] )
+		return r_list
+
+	#sorts alphabetically by title
+	#otherwise like sortByFirsAuthor
+	def sortByTitle(self,keys_list=None):
+		"""sorts publications in keys_list alphabetically by the title of the corresponding database entry
+		return order is 0 to 9 to A to a to Z to z to special characters"""
+		if not keys_list:
+			keys_list = self.getEntryList()
+			
+		r_list = self.searchObjTypeDerive(keys_list,query_objType=".obj.pub")
+		r_list.sort(key = lambda x: self.entries[x].title )
+		return r_list
 
 """THESE CLASSES WILL BE USED TO ADD NEW FUNCTIONALITIES IN FURTHER BUILDS"""
 #a derived class for Author and Author-like objects
@@ -211,8 +305,9 @@ _debug_pub.addKeywords(["test","debug"])
 
 _debug_article = Article(objName="_debug_article",title="An Article",author="First Author",year=2017,journal="A Journal",volume="300",number="40")
 _debug_article.addKeywords(["test","debug","article"])
+_debug_article.addAuthor("Second Author")
 
-_debug_book = Book(objName="_debug_book",title="A Book",author="First Author",year=2018,publisher="A Publisher")
+_debug_book = Book(objName="_debug_book",title="A Book",author="Author One",year=2018,publisher="A Publisher")
 _debug_book.addKeywords(["test","debug","book"])
 
 _debug_db = Database(objName="_debug_db")
@@ -223,11 +318,7 @@ _debug_db.addObject(_debug_book)
 
 def main():
 	print _debug_db
-	pubs=searchObjTypes(_debug_db.entries.keys(),_debug_db.entries)
-	print pubs
-	articles = searchKeywords(pubs,_debug_db.entries,list_of_keywords=["article"])
-	print articles
-
+	print _debug_db.sortByTitle()
 
 if __name__ == "__main__":
 	main()
